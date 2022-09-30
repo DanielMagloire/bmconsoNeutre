@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # pull official base image
-FROM python:3
+FROM python
 
 #directory to store app source code
 RUN mkdir /code
@@ -22,3 +22,5 @@ RUN pip install -r requirements.txt
 
 # copy project
 COPY . /code/
+
+CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
