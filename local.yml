@@ -1,0 +1,87 @@
+version: "3.7"
+
+networks:
+  app_net:
+  #dns_net:
+    #  driver: default
+      driver: bridge
+    ipam:
+      config:
+        - subnet: "192.168.0.0/24"
+          gateway: 192.168.0.1
+
+services:
+  db:
+    container_name: postgres_db
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    restart: always
+    environment:
+      - POSTGRES_NAME=bmconso
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      app_net:
+        #dns_net:
+        ipv4_address: 192.168.0.2
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../backend.Dockerfile
+    image: backend/database
+    ports:
+      - "8000:8000"
+    container_name: bmconso
+    restart: always
+    command: python manage.py runserver 0.0.0.0:8000
+    networks:
+      app_net:
+        #dns_net:
+        ipv4_address: 192.168.0.3
+    
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: frontend.Dockerfile
+    ports:
+      - "8080:8080"
+    links:
+      - postgres:postgres
+      - pgadmin:pgadmin
+    container_name: webapp
+    restart: always
+    networks:
+      app_net:
+        #dns_net:
+        ipv4_address: 192.168.0.4
+      
+  pgadmin:
+    container_name: pgadmin4
+    image: dpage/pgadmin4
+    restart: alway
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=grand_dan2@yahoo.fr
+      - PGADMIN_DEFAULT_PASSWORD=SuperSecret
+    volumes:
+      - ./data/pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      app_net:
+        #dns_net:
+        ipv4_address: 192.168.0.5
+
+# Pour configurer le serveur, nom: postgreSQL
+# Dans l'onglet "connect": host name: postgres_db (container_name of db or container IP_address)
+# username: postgres
+# password: password
+# cocher sur "save password"
+#Puis clique sur le bouton "save"
+
+# Juste
